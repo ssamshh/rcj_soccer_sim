@@ -27,9 +27,8 @@ Strength2 = 0
 RobotX1 = 0
 RobotX2 = 0
 DistZRobot2 = 0
-YouGo = ""
 DistRobot1ZRobot2 = 0
-YouGo1 = ""
+YouGo = False
 
 class MyRobot3(RCJSoccerRobot):
 
@@ -45,7 +44,6 @@ class MyRobot3(RCJSoccerRobot):
                 "roboty" : utils.roboty ,
                 "strength" : utils.strength ,
                 "distGoal" : utils.DistZGoal ,
-                "DZR2" : DistZRobot2,
                 "you_go" : YouGo,
                 }
         packet = json.dumps(data)
@@ -62,7 +60,7 @@ class MyRobot3(RCJSoccerRobot):
         global Strength1
         global Strength2
         global DistRobot1ZRobot2
-        global YouGo1
+        global YouGo
 
         while self.team_receiver.getQueueLength() > 0:
             packet = self.team_receiver.getString()
@@ -97,13 +95,9 @@ class MyRobot3(RCJSoccerRobot):
                         distGoal1 = value 
                         # print(f'DistGoalOne {distGoal1} ')
 
-                    elif key == "you_go":
-                        YouGo1 = value
-                        # print(f'YouGo One : {YouGo1}')
-
                     elif key == "DZR2" :
                         DistRobot1ZRobot2 = value
-                        print(f'Distance Robot1 by Robot2 : {DistRobot1ZRobot2}')
+                        print(f'Distance Robot1 -> Robot2 : {DistRobot1ZRobot2}')
 
                 elif robot_id ==  2:
                     if key == "roboty":
@@ -132,22 +126,16 @@ class MyRobot3(RCJSoccerRobot):
         DistZRobot2 = math.sqrt((RobotX2-utils.robotx) ** 2 + (RobotY2 - utils.roboty) ** 2)
         # print(DistZRobot2)
         if DistRobot1ZRobot2 < DistZRobot2:
-            YouGo1 = True
+            YouGo = True
         else :
-            YouGo1 = False
-      
-        if YouGo1 == True:
-            if RobotY2 > 0.69 and 0.23 < RobotX1 < 0.35 :
+            YouGo = False
+            if RobotY2 < 0.69 and 0.23<RobotX2<0.35:
                 utils.go_to(self,0.3,0.71)
-            elif RobotY2 > 0.69 and -0.23 > RobotX2 > -0.35:
+            elif RobotY2 < 0.69 and -0.23>RobotX2> -0.35:
                 utils.go_to(self,-0.3,0.71)
             else :
-                utils.turn2()
-        else :
-            utils.turn2(self)
-
-
-
+                utils.turn2(self)
+                
     def run(self):
         
        
@@ -162,10 +150,10 @@ class MyRobot3(RCJSoccerRobot):
             if self.is_new_data():
                 utils.toop_be_zamin_update(self)
                 utils.sensorUpdates(self)
-                if utils.ball_is_available == 0:
-                    utils.go_to(self,-0.38,0.08)
-                else :       
+                # if utils.ball_is_available == 0:
+                #     utils.go_to(self,-0.38,0.08)
+                # else :       
                     # self.BehindOFRobot2()
-                    utils.turn2(self)
+                self.BehindOFRobot2()
 
                 self.send_data_to_team(self.player_id)  
