@@ -28,9 +28,7 @@ RobotX3 = 0
 RobotY3 = 0
 RobotY2 = 0
 DistZRobot2 = 0
-DistRobot3ZRobot2 = 0
-YouGo3 = ""
-YouGo = 0
+YouGo = False
 RobotX1 = 0
 
 class MyRobot1(RCJSoccerRobot):
@@ -43,7 +41,7 @@ class MyRobot1(RCJSoccerRobot):
                 "strength" : utils.strength ,
                 "distGoal" : utils.DistZGoal ,
                 "DistZRobot2" : DistZRobot2,
-                "you_go" : YouGo
+                "DZR2 " : DistZRobot2
                 }
         packet = json.dumps(data)
         self.team_emitter.send(packet)
@@ -58,7 +56,7 @@ class MyRobot1(RCJSoccerRobot):
         global Strength2
         global Strength3
         global DistRobot3ZRobot2
-        global YouGo3
+        global YouGo
 
         while self.team_receiver.getQueueLength() > 0:
             packet = self.team_receiver.getString()
@@ -122,21 +120,13 @@ class MyRobot1(RCJSoccerRobot):
                         # print(f'DistGoalThree {distGoal3} ') 
 
                     elif key == "you_go":
-                        YouGo3 = value
-                        # print(f'YouGo Three {YouGo3}')
+                        YouGo = value
+                        print(f'YouGo Three {YouGo}')
 
-                    elif key == "DistZRobot2":
-                        DistRobot3ZRobot2 = value
-                        print(f'Distance Robot3 by Robot2 : {DistRobot3ZRobot2}')
     
     def BehindOFRobot2(self):
         DistZRobot2 = math.sqrt((RobotX2-utils.robotx) ** 2 + (RobotY2 - utils.roboty) ** 2)
-        if DistRobot3ZRobot2 < DistZRobot2:
-            YouGo3 = True
-        else :
-            YouGo3 = False
-
-        if YouGo3 == True:
+        if YouGo == True:
             if RobotY2 > 0.69 and 0.23 < RobotX1 < 0.35 :
                 utils.go_to(self,0.3,0.71)
                 print('situation one')
