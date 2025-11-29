@@ -1,51 +1,21 @@
 import math
 
-robotx=0 
-roboty=0
-heading=0
-robot_pos=''
-robot_angle=0
-data = ""
-team_data = ""
-ball_data = 0
-heading = ""
-direction = 0
-zavie_maghsad=0
-error_zavie=0
-error=0
-error_fasele=0
-xb=0
-yb=0
-ball_x=0
-ball_y=0
-direction=0
-strength=0
-ball_dist=0
-ASHAR=3
-toop_be_zamin_x=0
-toop_be_zamin_y=0
-ball_angle_predict = 0
-distance = 0
-ball_speed = 0
-delta_time = 0
-last_time = 0
-ball_angle_predict_deg = 0
-newDeg = 0
-ball_x = 0 
-ball_y = 0  
-strength = 0  
-ball_angle = 0
-sfront = 0
-sright = 0
-sback = 0
-sleft = 0
-state = 1
-ball_is_available = 0
-deg_ball_by_robot = 0
-is_turning = 0
-DistZGoal = 0
-def get_direction(ball_vector: list) -> int:
+robotx , roboty , heading , robot_angle , zavie_maghsad , error_zavie = 0 ,0 , 0 , 0 , 0 , 0 
+robot_pos , data , team_data , ball_data , heading , direction = '' , '' , '' , '' , '' , '' 
+error , error_fasele , xb , yb , ball_x , ball_y , direction , strength , ball_dist = 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0
+toop_be_zamin_x , toop_be_zamin_y , ball_is_available , zavie_toop_be_robot , is_turning , dist_ta_darvaze = 0 , 0 , 0 , 0 , 0 , 0
+ASHAR , state = 3 , 1
 
+def get_direction(ball_vector: list) -> int:
+    """Get direction to navigate robot to face the ball
+
+    Args:
+        ball_vector (list of floats): Current vector of the ball with respect
+            to the robot.
+
+    Returns:
+        int: 0 = forward, -1 = right, 1 = left
+    """
     if -0.13 <= ball_vector[1] <= 0.13:
         return 0
     return -1 if ball_vector[1] < 0 else 1
@@ -58,29 +28,10 @@ def move(self, left_speed, right_speed):
     self.right_motor.setVelocity(right_speed)
 
 def sensorUpdates(self):
-    global robotx
-    global roboty
-    global robot_pos
-    global data
-    global team_data
-    global ball_data
-    global heading
-    global sonar_values
-    global robot_angle
-    global ball_distance
-    global ball_x
-    global ball_y
-    global ball_dist
-    global ball_angle
-    global direction
-    global strength
-    global sright 
-    global sfront
-    global sback
-    global sleft
-    global deg_ball_by_robot
+    global robotx , roboty , robot_pos , data , team_data , ball_data , heading , sonar_values , robot_angle
+    global ball_distance , ball_x , ball_y , ball_dist , ball_angle , direction , strength
     global ball_is_available
-    global DistZGoal
+    global zavie_toop_be_robot , dist_ta_darvaze
 
     data = self.get_new_data()  
 
@@ -91,42 +42,40 @@ def sensorUpdates(self):
     robot_angle=math.degrees(heading)
 
     robot_pos = self.get_gps_coordinates()  
-    robotx=robot_pos[0]
-    roboty=robot_pos[1]
-    
-    sonar_values = self.get_sonar_values()
-    sright = sonar_values["right"] 
-    sleft = sonar_values["left"] 
-    sfront = sonar_values["front"] 
-    sback = sonar_values["back"]  
 
+    if self.name[0] == "B":
+        robotx = robot_pos[0]
+        roboty = robot_pos[1]
+    else:
+        robotx = -robot_pos[0]
+        roboty = -robot_pos[1]
+    
+    sonar_values = self.get_sonar_values()  
 
     if self.is_new_ball_data():
-        ball_is_available = 1
+        ball_is_available=1
         ball_data = self.get_new_ball_data()
-        ball_x = ball_data['direction'][0]
-        ball_y = ball_data['direction'][1]
+        ball_x = ball_data["direction"][0]
+        ball_y = ball_data["direction"][1]
         direction = get_direction(ball_data["direction"])
         strength = ball_data["strength"]
     else:
-        ball_is_available = 0
+        ball_is_available=0
         ball_data = None
         direction = None
-    ball_angle = math.atan2(ball_y,ball_x)
-    ball_angle = math.degrees(ball_angle)
-    
-    deg_ball_by_robot = (ball_angle + robot_angle)%360
 
-    DistZGoal = math.sqrt((robotx-0)**2 + (roboty-0.7)**2)
-    # print(f'DistZGoal : {DistZGoal}')
+    dist_ta_darvaze=math.sqrt((robotx-0)**2+(roboty-0.7)**2)
+    #print(dist_ta_darvaze)
+
+    ball_angle = math.atan2(ball_y, ball_x)
+    ball_angle = math.degrees(ball_angle)
+
+    zavie_toop_be_robot=(ball_angle+robot_angle)%360
 
 def go_to(self, x_maghsad, y_maghsad):
     global zavie_maghsad
-    global error_zavie
-    global error_fasele
-    global error
-    global delta_x
-    global delta_y
+    global error_zavie , error_fasele , error
+    global delta_x , delta_y
     delta_x = x_maghsad - robotx
     delta_y = y_maghsad - roboty
     zavie_maghsad = math.atan2(delta_y, delta_x) * (180 / math.pi)
@@ -146,29 +95,19 @@ def go_to(self, x_maghsad, y_maghsad):
     else:
         error_fasele = round(error_fasele * 50,3)
     error = error_zavie
-    if error_fasele > 2 :
-        move(self,error_fasele - error+10, error_fasele + error+10)                   
-    # else :
-    #     if robot_angle > 2:
-    #         move(self, 5, -5)   
-    #     elif robot_angle < -2:
-    #         move(self, -5, 5)  
-    #     else:
-    #         move(self, 0, 0)
+    move(self,error_fasele - error+10, error_fasele + error+10)
+    '''if error_fasele>1:
+        move(self,error_fasele - error+10, error_fasele + error+10)
+    else:
+        move(self,0,0)'''
+
 def toop_be_zamin_update(self):
-    global toop_be_zamin_x
-    global toop_be_zamin_y
-    global ball_dist
-    global ball_angle
-    global ball_angle_predict
-    global distance
-    global ball_speed
-    global now
-    global delta_time
-    global last_time
-    global ball_angle_predict_deg
-    global newDeg
+
+    global last_toop_be_zamin_x ,  last_toop_be_zamin_y , ball_speed , now , delta_time , last_time , ball_angle_predict_deg , newDeg
+    global toop_be_zamin_x , toop_be_zamin_y , ball_dist ,  ball_angle , ball_angle_predict , distance 
+
     r = 0.11886 * ball_dist - 0.02715
+
     ball_angle = math.atan2(ball_y, ball_x)
     ball_angle = math.degrees(ball_angle)
     if ball_angle < 0:
@@ -176,79 +115,73 @@ def toop_be_zamin_update(self):
     theta = (ball_angle+robot_angle+90) % 360
     if theta < 0:
         theta += 360
+
     theta = math.radians(theta)
     pos_x = r * math.cos(theta)
     pos_y = r * math.sin(theta)
     pos_x = round(pos_x, ASHAR)
-    pos_y = round(pos_y, ASHAR)
+    pos_y = round(pos_y, ASHAR)         
+        
     toop_be_zamin_x = robotx + 2.5 * pos_x
     toop_be_zamin_y = roboty + 2.5 * pos_y
     toop_be_zamin_x = round(toop_be_zamin_x, ASHAR)
     toop_be_zamin_y = round(toop_be_zamin_y, ASHAR)
 
-def mostaghim(self):
-    global state 
+def goal_keeper(self):
+
+    if toop_be_zamin_y<roboty:
+        if robotx>0 and robotx<0.3 or robotx<0 and robotx>-0.3 :
+            go_to(self,toop_be_zamin_x,0.6)
+        elif robotx>0:
+            go_to(self,0.3,0.6)
+        elif robotx<0:
+            go_to(self,-0.3,0.6)
+    elif toop_be_zamin_y>roboty and robotx>0:
+        go_to(self,0.3,toop_be_zamin_y)
+    elif toop_be_zamin_y>roboty and robotx<0:
+        go_to(self,-0.3,toop_be_zamin_y)
+
+def goToTheta(self,moveTheta):
+    go_to(self,robotx+math.cos(moveTheta*0.0174532925199433)*0.05,roboty+math.sin(moveTheta*0.0174532925199433)*0.05)
+
+def turn(self):
     global is_turning
+    if toop_be_zamin_y>roboty:
+        is_turning=1
+    elif zavie_toop_be_robot>350 or zavie_toop_be_robot<10:
+        is_turning=0
 
-    if toop_be_zamin_y > roboty :
-        is_turning = 1
-    elif deg_ball_by_robot > 350 or deg_ball_by_robot < 10:
-        is_turning = 0
-               
-    if toop_be_zamin_y < roboty:
-        if state == 1:
-            go_to(self,toop_be_zamin_x,toop_be_zamin_y+0.045)
-            if abs(toop_be_zamin_x-robotx) < 0.01 and abs(toop_be_zamin_y-roboty) < 0.01 :
-                state = 2
-        elif state == 2: 
-            go_to(self,toop_be_zamin_x,toop_be_zamin_y) 
-            if abs(toop_be_zamin_x-robotx) > 0.2 and abs(toop_be_zamin_y-roboty) > 0.2 :
-                state = 1
-    else :
-        if toop_be_zamin_x > 0 :
-            go_to(self,toop_be_zamin_x-0.06,toop_be_zamin_y+0.045)
-        elif toop_be_zamin_y < 0:
-            go_to(self,toop_be_zamin_x+0.06,toop_be_zamin_y+0.045)
-
-def turn2(self):
-    global is_turning
-
-    if toop_be_zamin_y > roboty :
-        is_turning = 1
-    elif deg_ball_by_robot > 350 or deg_ball_by_robot < 10:
-        is_turning = 0
-
-    if is_turning == 0 and toop_be_zamin_y < 0.5:
-        if 330>deg_ball_by_robot>30:
-            goToTheta(self,deg_ball_by_robot-90)
+    if is_turning==0 and toop_be_zamin_y<0.5:
+        if 330>zavie_toop_be_robot>30:
+            goToTheta(self,zavie_toop_be_robot-90)
         else:
-            if strength > 250 :
+            if strength>100:
                 go_to(self,0,-0.6)
-            else :
-                goToTheta(self,deg_ball_by_robot-90)
+            else:
+                goToTheta(self,zavie_toop_be_robot-90)
 
-    elif is_turning == 1 and toop_be_zamin_y < 0.5:
-        if toop_be_zamin_x < robotx :
-            goToTheta(self,deg_ball_by_robot - 90 - (strength / 1.5))
-        else :
-            goToTheta(self,deg_ball_by_robot - 90 + (strength / 1.5))
-    elif roboty > 0.5 :
+    elif is_turning==1 and toop_be_zamin_y<0.5:
+        if toop_be_zamin_x<robotx:
+            goToTheta(self,zavie_toop_be_robot-90 - strength/1.5)
+        else: 
+            goToTheta(self,zavie_toop_be_robot-90 + strength/1.5)
+    elif roboty>0.5:
         go_to(self,0,0.2)
 
-
-def goal_keeper(self):
-    if toop_be_zamin_y < roboty :
-        if 0<robotx<0.33 or -0.33<robotx<0:
-            go_to(self,toop_be_zamin_x,0.6)
-        elif robotx>=0.33:
-            go_to(self,0.33,0.6)
-        elif robotx<=-0.33:
-            go_to(self,-0.33,0.6)
-    elif toop_be_zamin_y>roboty and robotx > 0 :
-        go_to(self,0.33,toop_be_zamin_y)
-    elif toop_be_zamin_y>roboty and robotx < 0 :
-        go_to(self,-0.33,toop_be_zamin_y)
-
-
-def goToTheta(self,MoveTheta):
-    go_to(self,robotx+math.cos(MoveTheta*0.0174532925199433)*0.05 , roboty+math.sin(MoveTheta*0.0174532925199433)*0.05)
+def turn2(self):
+    global state
+    if toop_be_zamin_y<roboty:
+        if state==1:
+            go_to(self,toop_be_zamin_x,toop_be_zamin_y+0.045)
+            if abs(toop_be_zamin_x-robotx)<0.01 and abs((toop_be_zamin_y+0.045)-roboty)<0.01:
+                state=2
+        elif state==2:
+            go_to(self,toop_be_zamin_x,toop_be_zamin_y)
+            if abs(toop_be_zamin_x-robotx)>0.2 and abs(toop_be_zamin_y-roboty)>0.2:
+                state=1
+    else:
+        if toop_be_zamin_x>0 and is_turning==1:
+            go_to(self,toop_be_zamin_x-0.05,toop_be_zamin_y+0.045)
+        elif toop_be_zamin_x<0 and is_turning==1:
+            go_to(self,toop_be_zamin_x+0.05,toop_be_zamin_y+0.045)
+ 
