@@ -1,135 +1,147 @@
-import math  
+# rcj_soccer_player controller - ROBOT Y1
+
+# Feel free to import built-in libraries
+import math  # noqa: F401
 import json
+
+# You can also import scripts that you put into the folder with controller
 import utils
 from rcj_soccer_robot import RCJSoccerRobot, TIME_STEP
 
-robotx=0 
-roboty=0
-heading=0
-robot_pos=''
-robot_angle=0
-data = ""
-team_data = ""
-ball_data = ""
-heading = ""
-direction = ""
-zavie_maghsad=0
-error_zavie=0
-error=0
-error_fasele=0
-ballx1 = 0
-ballx3 = 0
-bally1 = 0
-bally3 = 0
-Strength1 = 0
-Strength3 = 0
-RobotX1 = 0
-RobotX3 = 0
+robotx , roboty , heading , robot_angle = 0 , 0 , 0 , 0
+
+data , team_data , ball_data , heading , direction  , robot_pos = "" ,"" ,"" ,"" ,"" , ""
+
+zavie_maghsad , error_zavie , error , error_fasele , is_turning , robot_num , strength1 , robotx1 , roboty1 , fasele_ta_robot1 , state = 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0  
+
+data={}
+
+to_boro , robot2DataValid , robot1DataValid , robot3DataValid= False , False , False , False
+
+robot_num , ballx1 , bally1 , robotx1 , roboty1 , strength1 , ballx3 , bally3 , robotx3 , roboty3 , strength3 = 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 
+
 class MyRobot2(RCJSoccerRobot):
-    # def print_sensors(self):
-    #     # print(utils.ball_angle)
-    #     # print(utils.robot_angle)
-    #     print("")
 
+    def send_data(self):
 
-    def run(self):
-        global data
-        global ballx1 
-        global ballx3
-        global RobotX1
-        global RobotX3
-        global RobotY1
-        global RobotY3
-        global Strength1
-        global Strength3
-        self.team_emitter = self.robot.getDevice("team emitter")
-        self.team_receiver = self.robot.getDevice("team receiver")
-        self.team_receiver.enable(TIME_STEP)
-        while self.robot.step(TIME_STEP) != -1:
-
-            data = { "robot_id" : 2 , 
-                    "ballx" : utils.toop_be_zamin_x, 
-                    "bally" : utils.toop_be_zamin_y, 
-                    "robotx" : utils.robotx,
-                    "roboty" : roboty, 
-                    "strength" : utils.strength ,
-                    "distGoal" : utils.DistZGoal,
-                    
-                    }
-
+        if utils.ball_is_available==1:
+            
+            robot2DataValid=True 
+            data = {"robot_num":2,
+                    'toop_be_zamin_x':utils.toop_be_zamin_x,
+                    'toop_be_zamin_y':utils.toop_be_zamin_y,
+                    'robot_x':utils.robotx,
+                    'robot_y':utils.roboty,
+                    'strength':utils.strength,
+                    'fasele_ta_robot1':fasele_ta_robot1,
+                    'robot2DataValid':robot2DataValid}
             packet = json.dumps(data)
             self.team_emitter.send(packet)
 
-            while self.team_receiver.getQueueLength() > 0:
-                packet = self.team_receiver.getString()
-                self.team_receiver.nextPacket()
-                data = json.loads(packet)
+        else:
 
-                for key,value in data.items():
-                    if key == 'robot_id':
-                        robot_id = value
-                    if robot_id == 1:
-                        if key == "ballx":
-                            ballx1 = value
-                            # print(f"BallXOne : {ballx1}")
-                   
-                        elif key == "bally":
-                            bally1 = value
-                            # print(f"BallYOne : {bally1}")
+            robot2DataValid=False
+            data = {"robot_num":2,
+                    'robot_x':utils.robotx,
+                    'robot_y':utils.roboty,
+                    'fasele_ta_robot1':fasele_ta_robot1,
+                    'robot2DataValid':robot2DataValid}
+            packet = json.dumps(data)
+            self.team_emitter.send(packet)
+
+
+
+    def receive_data(self):
+
+        global robot_num
+        global robotx1 , roboty1 , strength1 , data , fasele_ta_robot1 , ballx1 , bally1 , robot1DataValid
+        global robotx3 , roboty3 , strength3 , ballx3 , bally3 , to_boro , robot3DataValid
+
+        while self.team_receiver.getQueueLength() > 0:
+            packet = self.team_receiver.getString()
+            self.team_receiver.nextPacket()
+            data = json.loads(packet)
+
+            for key, values in data.items():
+                if key=='robot_num':
+                    robot_num=values
+                if robot_num==1:
+                    # print(f'Robot ID : {robot_num}')
+                    if key=='toop_be_zamin_x':
+                        ballx1=values
+                        # print(f'Ball X  1 : {ballx1}')
+                    elif key=='toop_be_zamin_y':
+                        bally1=values
+                        # print(f'Ball Y 1 : {bally1}')
+                    elif key=='robot_x':
+                        robotx1=values
+                        # print(f'Robot X 1 : {robotx1}')
+                    elif key=='robot_y':
+                        roboty1=values
+                        # print(f'Robot Y 1 : {roboty1}')
+                    elif key=='strength':
+                        strength1=values
+                        # print(f'Strength ball -> Robot 1 : {strength1}')
+                    elif key == "robot1DataValid" :
+                        robot1DataValid = values 
+                        # print(f'Data Valid Robot1 : {robot1DataValid}')
+                elif robot_num==3:
+                    # print(f'Robot ID : {robot_num}')
+                    if key=='toop_be_zamin_x':
+                        ballx3=values
+                        # print(f'Ball X  3 : {ballx3}')
+                    elif key=='toop_be_zamin_y':
+                        bally3=values
+                        # print(f'Ball Y 3 : {bally3}')
+                    elif key=='robot_x':
+                        robotx3=values
+                        # print(f'Robot X 3 : {robotx3}')
+                    elif key=='robot_y':
+                        roboty3=values
+                        # print(f'Robot Y 3 : {roboty3}')
+                    elif key=='strength':
+                        strength3=values
+                        # print(f'Strength ball -> Robot 3 : {strength3}')
+                    elif key=='to_boro':
+                        to_boro=values
+                        # print(f'You Go : {to_boro}')
+                    elif key=="robot3DataValid":
+                        robot3DataValid=values
+                        # print(f'Data Valid Robot 3 : {robot3DataValid}')
                 
-                        elif key == "robotx":
-                            RobotX1 = value
-                            # print(f"RobotXOne : {RobotX1}")                   
-       
-                        elif key == "roboty":
-                            RobotY1 = value
-                            # print(f"RobotYOne : {RobotY1}")
-                
-                        elif key == "strength":
-                            Strength1 = value
-                            # print(f'StrengthOne : {Strength1}')
 
-                        elif key == "distGoal" :
-                            distGoal1 = value 
-                            # print(f'DistGoalOne {distGoal1} ')
-                
-                    elif robot_id == 3 :
-                        if key == "strength":
-                            Strength3 = value
-                            # print(f'StrengthThree : {Strength3}') 
-                        elif key == "roboty":
-                            RobotY3 = value
-                            # print(f"RobotYThree : {RobotY3}")
-                        elif key == "robotx":
-                            RobotX3 = value
-                            # print(f"RobotXThree : {RobotX3}")                       
-                        elif key == "bally":
-                            bally3 = value
-                            # print(f"BallYThree : {bally3}")
-                        elif key == "ballx":
-                            ballx3 = value
-                            # print(f"BallXThree : {ballx3}")
+    def run(self):
+ 
+        self.team_emitter = self.robot.getDevice("team emitter")
+        self.team_receiver = self.robot.getDevice("team receiver")
+        self.team_receiver.enable(TIME_STEP)
 
-                        elif key == "distGoal" :
-                            distGoal3 = value 
-                            # print(f'DistGoalThree {distGoal3} ')
+        while self.robot.step(TIME_STEP) != -1 :
 
-            if self.is_new_data():
-                # print_sensors(self)
-                utils.sensorUpdates(self)
+            self.send_data()
+            self.receive_data()
+
+            if self.is_new_data():            
+                global fasele_ta_robot1
+
+                utils.sensorUpdates(self) 
                 utils.toop_be_zamin_update(self)
-                utils.goal_keeper(self)
-                
-                # print('ROBOT X :',utils.toop_be_zamin_x,'ROBOT Y : ',utils.toop_be_zamin_y)
-                # print(utils.ball_is_available)
+
+                fasele_ta_robot1=math.sqrt((robotx1-utils.robotx)**2+(roboty1-utils.roboty)**2)
                 if utils.ball_is_available == 0:
-                    utils.go_to(self,-0.0019,0.58)
-                    # if utils.robotx > -0.0019 and utils.roboty < 0.58 :
-                    #     if robot_angle > 2:
-                    #         utils.move(self, 1, -1)   
-                    #     elif robot_angle < -2:
-                    #         utils.move(self, -1, 1)  
-                    #     else:
-                    #         utils.move(self, 0, 0)
-                print("1")
+                    utils.go_to(self,-0.3,0.4)
+                else :
+                    utils.turn2(self)
+
+
+
+                # if to_boro==True:
+                #     if roboty1>0.69 and 0.23<robotx1<0.35:
+                #         utils.go_to(self,0.3,0.71)
+                #     elif roboty1>0.69 and -0.23>robotx1>-0.35:
+                #         utils.go_to(self,-0.3,0.71)
+                #     else:
+                #         utils.turn(self)
+                
+
                 self.send_data_to_team(self.player_id)
