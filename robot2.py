@@ -18,7 +18,7 @@ data={}
 
 to_boro , robot2DataValid , robot1DataValid , robot3DataValid= False , False , False , False
 
-robot_num , ballx1 , bally1 , robotx1 , roboty1 , strength1 , ballx3 , bally3 , robotx3 , roboty3 , strength3 = 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 
+robot_num , ballx1 , bally1 , robotx1 , roboty1 , strength1 , ballx3 , bally3 , robotx3 , roboty3 , strength3 , ISeeTheBall1 , ISeeTheBall3 = 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 
 
 class MyRobot2(RCJSoccerRobot):
 
@@ -34,6 +34,7 @@ class MyRobot2(RCJSoccerRobot):
                     'robot_y':utils.roboty,
                     'strength':utils.strength,
                     'fasele_ta_robot1':fasele_ta_robot1,
+                    'ISeeBall' : utils.ball_is_available,
                     'robot2DataValid':robot2DataValid}
             packet = json.dumps(data)
             self.team_emitter.send(packet)
@@ -45,7 +46,9 @@ class MyRobot2(RCJSoccerRobot):
                     'robot_x':utils.robotx,
                     'robot_y':utils.roboty,
                     'fasele_ta_robot1':fasele_ta_robot1,
-                    'robot2DataValid':robot2DataValid}
+                    'robot2DataValid':robot2DataValid,
+                    'ISeeBall' : utils.ball_is_available}
+
             packet = json.dumps(data)
             self.team_emitter.send(packet)
 
@@ -54,8 +57,8 @@ class MyRobot2(RCJSoccerRobot):
     def receive_data(self):
 
         global robot_num
-        global robotx1 , roboty1 , strength1 , data , fasele_ta_robot1 , ballx1 , bally1 , robot1DataValid
-        global robotx3 , roboty3 , strength3 , ballx3 , bally3 , to_boro , robot3DataValid
+        global robotx1 , roboty1 , strength1 , data , fasele_ta_robot1 , ballx1 , bally1 , robot1DataValid , ISeeTheBall1
+        global robotx3 , roboty3 , strength3 , ballx3 , bally3 , to_boro , robot3DataValid,ISeeTheBall3
 
         while self.team_receiver.getQueueLength() > 0:
             packet = self.team_receiver.getString()
@@ -85,6 +88,9 @@ class MyRobot2(RCJSoccerRobot):
                     elif key == "robot1DataValid" :
                         robot1DataValid = values 
                         # print(f'Data Valid Robot1 : {robot1DataValid}')
+                    elif key == 'ISeeBall' :
+                        ISeeTheBall1 = values 
+                        # print(f'is Robot1 See The Ball ? {ISeeTheBall1}')
                 elif robot_num==3:
                     # print(f'Robot ID : {robot_num}')
                     if key=='toop_be_zamin_x':
@@ -108,6 +114,10 @@ class MyRobot2(RCJSoccerRobot):
                     elif key=="robot3DataValid":
                         robot3DataValid=values
                         # print(f'Data Valid Robot 3 : {robot3DataValid}')
+                    elif key == 'ISeeBall' :
+                        ISeeTheBall3 = values 
+                        # print(f'is Robot3 See The Ball ? {ISeeTheBall3}')
+
                 
 
     def run(self):
@@ -128,12 +138,41 @@ class MyRobot2(RCJSoccerRobot):
                 utils.toop_be_zamin_update(self)
 
                 fasele_ta_robot1=math.sqrt((robotx1-utils.robotx)**2+(roboty1-utils.roboty)**2)
-                if utils.ball_is_available == 0:
-                    utils.go_to(self,-0.3,0.4)
-                else :
+                # if utils.ball_is_available == 0:
+                #     utils.go_to(self,-0.3,0.4)
+                # else :
+                #     utils.turn2(self)
+
+                if utils.ball_is_available == 1 and ISeeTheBall3 == 1:
+                    print("1")
+
+                    if utils.strength > strength3:
+                        utils.turn2(self)
+                        print("2")
+
+                    if strength3 > utils.strength:
+                        utils.go_to(self, -0.1, bally3)
+                        print("3")
+                
+                if utils.ball_is_available == 1 and ISeeTheBall3 == 0 :
                     utils.turn2(self)
+                if ISeeTheBall3 == 1 and utils.ball_is_available == 0:
+                    utils.go_to(self, -0.1, bally3)
 
 
+
+
+
+                if utils.robotx > 0 and utils.ball_is_available == 1 :
+                    utils.go_to(self, 0, utils.toop_be_zamin_y)
+                    # print('situation one')
+                if utils.robotx < 0 and utils.ball_is_available == 1:
+                    utils.turn2(self)
+                    # print('situation two')
+                if utils.ball_is_available == 0 : 
+                    utils.go_to(self,-0.3,0.2)
+                    # print('defence')
+                   
 
                 # if to_boro==True:
                 #     if roboty1>0.69 and 0.23<robotx1<0.35:
@@ -142,6 +181,8 @@ class MyRobot2(RCJSoccerRobot):
                 #         utils.go_to(self,-0.3,0.71)
                 #     else:
                 #         utils.turn(self)
-                
+
+
+
 
                 self.send_data_to_team(self.player_id)
