@@ -18,7 +18,7 @@ robot3DataValid , robot2DataValid  , robot1DataValid = False , False , False
 
 robot_num , ballx2 , bally2 , robotx2 , roboty2 , strength2 , ballx3 , bally3 , robotx3 , roboty3 , strength3  , state= 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 1
 
-othersBallX , othersBallY , numbersOfValidData , othersBallXFinal , othersBallyFinal = 0 , 0 , 0 , 0 , 0 
+othersBallX , othersBallY , numbersOfValidData , othersBallXFinal , othersBallyFinal , ISeeTheBall3 , ISeeTheBall2 = 0 , 0 , 0 , 0 , 0 , 0 , 0
 
 
 class MyRobot1(RCJSoccerRobot):
@@ -33,7 +33,9 @@ class MyRobot1(RCJSoccerRobot):
                     'robot_x':utils.robotx,
                     'robot_y':utils.roboty,
                     'strength':utils.strength,
-                    "robot1DataValid" : robot1DataValid}
+                    "robot1DataValid" : robot1DataValid,
+                    'ISeeBall' : utils.ball_is_available}
+
             packet = json.dumps(data)
             self.team_emitter.send(packet)
         
@@ -42,15 +44,17 @@ class MyRobot1(RCJSoccerRobot):
             data = {"robot_num": 1,
                     'robot_x':utils.robotx,
                     'robot_y':utils.roboty,
-                    "robot1DataValid" : robot1DataValid}
+                    "robot1DataValid" : robot1DataValid,
+                    'ISeeBall' : utils.ball_is_available}
+
             packet = json.dumps(data)
             self.team_emitter.send(packet)
 
     def receive_data(self):
 
         global data , robot_num 
-        global ballx2 , bally2 , robotx2 , roboty2 , strength2 , robot2DataValid
-        global ballx3 , bally3 , robotx3 , roboty3 , strength3 , robot3DataValid 
+        global ballx2 , bally2 , robotx2 , roboty2 , strength2 , robot2DataValid , ISeeTheBall2
+        global ballx3 , bally3 , robotx3 , roboty3 , strength3 , robot3DataValid , ISeeTheBall3 
        
 
         while self.team_receiver.getQueueLength() > 0:
@@ -81,7 +85,9 @@ class MyRobot1(RCJSoccerRobot):
                     elif key=="robot3DataValid":
                         robot3DataValid=value
                         # print(f'Data Valid Robot 3 : {robot3DataValid}')
-                        
+                    elif key == 'ISeeBall' :
+                        ISeeTheBall3 = value 
+                        # print(f'is Robot3 See The Ball ? {ISeeTheBall3}')
                 elif robot_num==2:
                     # print(f'Robot ID : {robot_num}')
                     if key=='toop_be_zamin_x':
@@ -102,7 +108,10 @@ class MyRobot1(RCJSoccerRobot):
                     elif key=='robot2DataValid':
                         robot2DataValid=value
                         # print(f'Data Valid Robot 2 : {robot2DataValid}')
-
+                    elif key == 'ISeeBall':
+                        ISeeTheBall2 = value
+                        # print(f' is Robot2 See The Ball ? {ISeeTheBall2}')
+                        
     def GoalKeeper(self):
         global othersBallX , othersBallXFinal
         global othersBallY , othersBallyFinal
