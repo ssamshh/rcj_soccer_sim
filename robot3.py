@@ -3,12 +3,12 @@
 # Feel free to import built-in libraries
 import math  # noqa: F401
 import json
-
+import time
 # You can also import scripts that you put into the folder with controller
 import utils
 from rcj_soccer_robot import RCJSoccerRobot, TIME_STEP
 
-robotx , roboty , heading , robot_angle = 0 , 0 , 0 , 0 
+robotx , roboty , heading , robot_angle , othersBallX , othersBallXFinal , othersBallY , othersBallyFinal , numbersOfValidData = 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0
 
 data , team_data  , ball_data , heading , direction , robot_pos = "" , "" , "" , "" , "" , ""
 
@@ -21,6 +21,8 @@ fasele_robot2_ta_robot1=0
 to_boro , robot3DataValid  , robot1DataValid  , robot2DataValid = False , False , False , False
 
 robot_num , ballx2 , bally2 , robotx2 , roboty2 , strength2 , ballx1 , bally1 , robotx1 , roboty1 , strength1 , ISeeTheBall2 , ISeeTheBall1 = 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0  
+
+ball_stop_time , last_time , last_ballY , last_ballX = 0 , 0 , 0 , 0
 
 class MyRobot3(RCJSoccerRobot):
     
@@ -119,6 +121,70 @@ class MyRobot3(RCJSoccerRobot):
                         # print(f' is Robot2 See The Ball ? {ISeeTheBall2}')
 
                     
+    def attack(self):
+        global othersBallX , othersBallXFinal
+        global othersBallY , othersBallyFinal
+        global numbersOfValidData
+
+        if utils.ball_is_available==1:
+            utils.turn2(self)
+        else:    
+            othersBallX=0
+            if robot1DataValid==True:
+                othersBallX = ballx1 + othersBallX
+                numbersOfValidData+=1
+            if robot2DataValid==True:
+                othersBallX = ballx2 + othersBallX
+                numbersOfValidData+=1
+            if numbersOfValidData>0:
+                othersBallXFinal= othersBallX / numbersOfValidData
+            
+            othersBallY=0
+            numbersOfValidData=0
+
+            if robot1DataValid==True:
+                othersBallY= bally1 + othersBallY
+                numbersOfValidData+=1
+            if robot2DataValid==True:
+                othersBallY = bally2 + othersBallY
+                numbersOfValidData+=1
+            if numbersOfValidData>0:
+                othersBallyFinal= othersBallY / numbersOfValidData
+
+            
+
+            if robot1DataValid == True:
+                if strength1 > 30 :
+                    utils.go_to(self,-othersBallXFinal/3,othersBallyFinal)
+                elif strength1 < 30:
+                    utils.go_to(self,othersBallXFinal,othersBallyFinal)
+            else:
+                utils.go_to(self,-0.3,0.3)
+
+            if robot2DataValid == True :
+                if strength2 > 30 :
+                    utils.go_to(self,-othersBallXFinal/3,othersBallyFinal)
+                elif strength2 < 30:
+                    utils.go_to(self,othersBallXFinal,othersBallyFinal)
+            else:
+                utils.go_to(self,-0.3,0.3)
+    
+    def VBall(self):
+        
+        global last_ballX
+        global last_ballY
+        global last_time
+        global ball_stop_time
+
+        if time.time() - last_time > 1:
+            V = math.sqrt((utils.toop_be_zamin_x-last_ballX)**2+(utils.toop_be_zamin_y-last_ballY)**2)
+
+            if V < 0.001 :
+                ball_stop_time+=1
+
+            last_ballX=utils.toop_be_zamin_x
+            last_ballY=utils.toop_be_zamin_y
+            last_time=time.time()
 
     def run(self):
 
@@ -136,6 +202,8 @@ class MyRobot3(RCJSoccerRobot):
                 
                 utils.sensorUpdates(self)
                 utils.toop_be_zamin_update(self)
+                self.attack()
+                self.VBall()
                 fasele_ta_robot1=math.sqrt((robotx1-utils.robotx)**2+(roboty1-utils.roboty)**2)
                 
 
@@ -144,34 +212,20 @@ class MyRobot3(RCJSoccerRobot):
                 # else:
                 #     utils.go_to(self,0.3,0.4)
 
-#  new code for wednesday
-                if utils.ball_is_available == 1 and ISeeTheBall2 == 1:
-                    print("1")
-
-                    if utils.strength > strength2:
-                        utils.turn2(self)
-                        print("2")
-
-                    if strength2 > utils.strength:
-                        utils.go_to(self, 0.1, bally2)
-                        print("3")
-                
-                if utils.ball_is_available == 1 and ISeeTheBall2 == 0 :
-                    utils.turn2(self)
-                if ISeeTheBall2 == 1 and utils.ball_is_available == 0:
-                    utils.go_to(self, 0.1, bally2)
-
-
 #  nesf kon
 
-                if utils.robotx < 0 and utils.ball_is_available == 1 :
-                    utils.go_to(self, 0, utils.toop_be_zamin_y)
-                    # print('situation one')
-                if utils.robotx > 0 and utils.ball_is_available == 1:
-                    utils.turn2(self)
+                # if utils.robotx < 0 and utils.ball_is_available == 1 :
+                #     utils.go_to(self, 0.1, utils.toop_be_zamin_y)
+                #     # print('situation one')
+                # if utils.robotx > 0 and utils.ball_is_available == 1:
+                #     utils.turn2(self)
                     # print('situation two')
-                if utils.ball_is_available == 0 : 
-                    utils.go_to(self,0.3,0.2)
+                # if utils.ball_is_available == 0 : 
+                #     utils.go_to(self,0.3,0.2)
+
+
+                if roboty > 0.5 :
+                    utils.go_to(self,0.3,0.4)
                     # print('defence')
                 # if fasele_robot2_ta_robot1<fasele_ta_robot1:
                 #     to_boro=True
